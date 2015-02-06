@@ -94,7 +94,7 @@ genAna = cfg.Analyzer(
     # Particles of which we want to save the pre-FSR momentum (a la status 3).
     # Note that for quarks and gluons the post-FSR doesn't make sense,
     # so those should always be in the list
-    savePreFSRParticleIds = { 1,2,3,4,5, 11,12,13,14,15,16, 21 },
+    savePreFSRParticleIds = { 1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 21 },
     # Make also the list of all genParticles, for other analyzers to handle
     makeAllGenParticles = True,
     # Make also the splitted lists
@@ -267,6 +267,7 @@ jetAna = cfg.Analyzer(
     shiftJER = 0, # set to +1 or -1 to get +/-1 sigma shifts  
     cleanJetsFromTaus = False,
     cleanJetsFromIsoTracks = False,
+    #doQG = True,
     doQG = False,
     )
 

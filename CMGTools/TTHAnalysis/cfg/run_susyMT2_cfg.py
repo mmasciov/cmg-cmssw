@@ -4,6 +4,11 @@ import PhysicsTools.HeppyCore.framework.config as cfg
 #Load all analyzers
 from CMGTools.TTHAnalysis.analyzers.susyCore_modules_cff import *
 
+cfg.Analyzer.nosubdir = True
+
+import logging
+logging.basicConfig(level=logging.ERROR)
+
 ##------------------------------------------
 ## Redefine what I need
 ##------------------------------------------
@@ -38,6 +43,7 @@ jetAna.jetGammaDR = 0.4
 jetAna.minGammaPt = 20
 jetAna.gammaEtaCentral = 2.4
 jetAna.cleanJetsFromIsoTracks = True ## added for Dominick
+jetAna.doQG = True
 
 # TAU 
 tauAna.etaMax = 2.3
@@ -128,8 +134,8 @@ sequence = cfg.Sequence(
 
 #-------- SAMPLES AND TRIGGERS -----------
 #from CMGTools.TTHAnalysis.samples.samples_13TeV_CSA14 import * 
-#from CMGTools.TTHAnalysis.samples.samples_13TeV_CSA14v2 import *
-from CMGTools.TTHAnalysis.samples.samples_13TeV_PHYS14 import *
+from CMGTools.TTHAnalysis.samples.samples_13TeV_CSA14v2 import *
+#from CMGTools.TTHAnalysis.samples.samples_13TeV_PHYS14 import *
 
 #selectedComponents = [ SingleMu, DoubleElectron, TTHToWW_PUS14, DYJetsToLL_M50_PU20bx25, TTJets_PUS14 ]
 
@@ -153,9 +159,62 @@ from CMGTools.TTHAnalysis.samples.samples_13TeV_PHYS14 import *
 
 #selectedComponents = [ SMS_T1qqqq_2J_mGl1000_mLSP800_PU_S14_POSTLS170 ]
 
+selectedComponents = [
+QCD_Pt1800to2400,
+QCD_Pt2400to3200,
+QCD_Pt3200,
+QCD_HT250To500,
+QCD_HT500To1000,
+QCD_HT1000ToInf,
+GJets_HT100to200,
+GJets_HT200to400,
+GJets_HT400to600,
+GJets_HT600toInf,
+]
+
+#selectedComponents = [
+##QCD_HT_250To500,
+##QCD_HT_500To1000,
+##QCD_HT_1000ToInf,
+##QCD_HT_250To500_ext1,
+##QCD_HT_500To1000_ext1,
+##QCD_HT_1000ToInf_ext1,
+#WJetsToLNu_HT100to200,
+#WJetsToLNu_HT200to400,
+#WJetsToLNu_HT400to600,
+#WJetsToLNu_HT600toInf,
+#DYJetsToLL_M50_HT100to200,
+#DYJetsToLL_M50_HT200to400,
+#DYJetsToLL_M50_HT400to600,
+#DYJetsToLL_M50_HT600toInf,
+##GJets_HT100to200,
+##GJets_HT200to400,
+##GJets_HT400to600,
+##GJets_HT600toInf,
+#ZJetsToNuNu_HT100to200,
+#ZJetsToNuNu_HT200to400,
+#ZJetsToNuNu_HT400to600,
+#ZJetsToNuNu_HT600toInf,
+#TTJets,
+#SMS_T2tt_2J_mStop850_mLSP100,
+#SMS_T2tt_2J_mStop650_mLSP325,
+#SMS_T2tt_2J_mStop500_mLSP325,
+#SMS_T2tt_2J_mStop425_mLSP325,
+#SMS_T2qq_2J_mStop600_mLSP550,
+#SMS_T2qq_2J_mStop1200_mLSP100,
+#SMS_T2bb_2J_mStop900_mLSP100,
+#SMS_T2bb_2J_mStop600_mLSP580,
+#SMS_T1tttt_2J_mGl1500_mLSP100,
+#SMS_T1tttt_2J_mGl1200_mLSP800,
+#SMS_T1qqqq_2J_mGl1400_mLSP100,
+#SMS_T1qqqq_2J_mGl1000_mLSP800,
+#SMS_T1bbbb_2J_mGl1500_mLSP100,
+#SMS_T1bbbb_2J_mGl1000_mLSP900
+#]
+
 #-------- HOW TO RUN
 test = 1
-if test==1:
+if test==2:
     # test a single component, using a single thread.
     #comp=TTJets_PU20bx25 #TTJets_forSynch
     #comp=SMS_T1qqqq_2J_mGl1400_mLSP100_PU_S14_POSTLS170 # small files for testing
@@ -170,17 +229,19 @@ if test==1:
     ## 50 ns ttbar CSAv2
     #    comp=TTJets
     ## 25 ns ttbar PHYS14
-#    comp = TTJets
-#    comp.files = comp.files[:1]
+    #comp = TTJets
+    #comp.files = comp.files[:1]
+    comp = GJets_HT600toInf
+    comp.files = ['/afs/cern.ch/user/m/mmasciov/CMSSW_7_2_3_PhysicsTools/src/CMGTools/TTHAnalysis/cfg/miniAOD-prod_PAT.root']
 
 #    comp=TTJets
 #    comp.files = ['/afs/cern.ch/work/d/dalfonso/public/ttjets_miniaodsim_00C90EFC-3074-E411-A845-002590DB9262.root']
-    comp=GJets_HT200to400
-    comp.files = ['/afs/cern.ch/work/d/dalfonso/public/gjets_ht200to400_miniaodsim_060B8ED3-8571-E411-A2CD-002590D0AFEA.root']
+#    comp=GJets_HT200to400
+#    comp.files = ['/afs/cern.ch/work/d/dalfonso/public/gjets_ht200to400_miniaodsim_060B8ED3-8571-E411-A2CD-002590D0AFEA.root']
     selectedComponents = [comp]
-    comp.splitFactor = 10
+#    comp.splitFactor = 10
 elif test==2:
-    selectedComponents = [ SingleMu, DoubleElectron, TTHToWW_PUS14, DYJetsToLL_M50_PU20bx25, TTJets_PUS14 ]
+    #selectedComponents = [ SingleMu, DoubleElectron, TTHToWW_PUS14, DYJetsToLL_M50_PU20bx25, TTJets_PUS14 ]
     # test all components (1 thread per component).
     for comp in selectedComponents:
         comp.splitFactor = 251

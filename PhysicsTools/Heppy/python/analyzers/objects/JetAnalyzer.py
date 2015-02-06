@@ -352,6 +352,7 @@ setattr(JetAnalyzer,"defaultConfig", cfg.Analyzer(
     relaxJetId = False,  
     doPuId = False, # Not commissioned in 7.0.X
     doQG = False, 
+    #doQG = True,
     recalibrateJets = False,
     shiftJEC = 0, # set to +1 or -1 to get +/-1 sigma shifts
     smearJets = True,
