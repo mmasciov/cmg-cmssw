@@ -72,6 +72,7 @@ class ttHMT2Control( Analyzer ):
         # for the gamma + jets variables we use do not take care about the leptons, we consider jets that do not overlap with the first jets
         gamma_objects30j = [ j for j in event.gamma_cleanJets if j.pt() > 30 and abs(j.eta()) < 2.5 ]
         gamma_objects40j = [ j for j in event.gamma_cleanJets if j.pt() > 40 and abs(j.eta()) < 2.5 ]
+        gamma_objects30ja = [ j for j in event.gamma_cleanJetsAll if j.pt() > 30 ]
         gamma_objects40ja = [ j for j in event.gamma_cleanJetsAll if j.pt() > 40 ]
 
         event.gamma_htJet25 = sum([x.pt() for x in gamma_objects25])
@@ -89,6 +90,11 @@ class ttHMT2Control( Analyzer ):
         event.gamma_mhtJet30j = event.gamma_mhtJet30jvec.pt()
         event.gamma_mhtPhiJet30j = event.gamma_mhtJet30jvec.phi()
 
+        event.gamma_htJet30ja = sum([x.pt() for x in gamma_objects30ja])
+        event.gamma_mhtJet30javec = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in gamma_objects30ja])) , -1.*(sum([x.py() for x in gamma_objects30ja])), 0, 0 )
+        event.gamma_mhtJet30ja = event.gamma_mhtJet30javec.pt()
+        event.gamma_mhtPhiJet30ja = event.gamma_mhtJet30javec.phi()
+
         event.gamma_htJet40 = sum([x.pt() for x in gamma_objects40])
         event.gamma_mhtJet40vec = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in gamma_objects40])) , -1.*(sum([x.py() for x in gamma_objects40])), 0, 0 )
         event.gamma_mhtJet40 = event.gamma_mhtJet40vec.pt()
@@ -104,7 +110,7 @@ class ttHMT2Control( Analyzer ):
         event.gamma_mhtJet40ja = event.gamma_mhtJet40javec.pt()
         event.gamma_mhtPhiJet40ja = event.gamma_mhtJet40javec.phi()
 
-         # MET + photon                                                                                                                                                                                                           
+         # MET + photon                                                                                                                                                                                                     
         event.gamma_met = ROOT.reco.Particle.LorentzVector( event.met.px(), event.met.py(), 0, 0 )
         event.gamma_metNoPU = ROOT.reco.Particle.LorentzVector( event.metNoPU.px(), event.metNoPU.py(), 0, 0 )
         for gamma in event.selectedPhotons:
@@ -112,14 +118,28 @@ class ttHMT2Control( Analyzer ):
             event.gamma_metNoPU = ROOT.reco.Particle.LorentzVector( event.gamma_metNoPU.px() + gamma.px(), event.gamma_metNoPU.py() + gamma.py() , 0, 0 )
             break # only lead photon
 
-        # look for minimal deltaPhi between MET and four leading jets with pt>40 and eta<2.4                                                                                                                                      
+        # look for minimal deltaPhi between MET and four leading jets with pt>30 and eta<2.4                                                                                                                                
+        event.gamma_deltaPhiMin_30j_had = 999.
+        for n,j in enumerate(gamma_objects30ja):
+            if n>3:  break
+            thisDeltaPhi = abs( deltaPhi( j.phi(), event.gamma_met.phi() ) )
+            if thisDeltaPhi < event.gamma_deltaPhiMin_30j_had : event.gamma_deltaPhiMin_30j_had = thisDeltaPhi
+
+        # look for minimal deltaPhi between MET and four leading jets with pt>40 and eta<2.4                                                                                                                                
         event.gamma_deltaPhiMin_had = 999.
         for n,j in enumerate(gamma_objects40ja):
             if n>3:  break
             thisDeltaPhi = abs( deltaPhi( j.phi(), event.gamma_met.phi() ) )
             if thisDeltaPhi < event.gamma_deltaPhiMin_had : event.gamma_deltaPhiMin_had = thisDeltaPhi
 
-        # absolute value of the vectorial difference between met and mht                                                                                                                                                          
+        # absolute value of the vectorial difference between met and mht (30j)
+        gamma_diffMetMht_30j_had_vec = ROOT.reco.Particle.LorentzVector(event.gamma_mhtJet30jvec.px()-event.gamma_met.px(), event.gamma_mhtJet30jvec.py()-event.gamma_met.py(), 0, 0 )
+        event.gamma_diffMetMht_30j_had = sqrt( gamma_diffMetMht_30j_had_vec.px()*gamma_diffMetMht_30j_had_vec.px() + gamma_diffMetMht_30j_had_vec.py()*gamma_diffMetMht_30j_had_vec.py() )
+
+        gamma_diffMetMht_30j_vec = ROOT.reco.Particle.LorentzVector(event.gamma_mhtJet30vec.px()-event.gamma_met.px(), event.gamma_mhtJet30vec.py()-event.gamma_met.py(), 0, 0 )
+        event.gamma_diffMetMht_30j = sqrt( gamma_diffMetMht_30j_vec.px()*gamma_diffMetMht_30j_vec.px() + gamma_diffMetMht_30j_vec.py()*gamma_diffMetMht_30j_vec.py() )
+
+        # absolute value of the vectorial difference between met and mht (40j)
         gamma_diffMetMht_had_vec = ROOT.reco.Particle.LorentzVector(event.gamma_mhtJet40jvec.px()-event.gamma_met.px(), event.gamma_mhtJet40jvec.py()-event.gamma_met.py(), 0, 0 )
         event.gamma_diffMetMht_had = sqrt( gamma_diffMetMht_had_vec.px()*gamma_diffMetMht_had_vec.px() + gamma_diffMetMht_had_vec.py()*gamma_diffMetMht_had_vec.py() )
 
@@ -134,7 +154,7 @@ class ttHMT2Control( Analyzer ):
 
         vetoLeptons = [ l for l in event.selectedLeptons if l.pt() > 10 and abs(l.eta()) < 2.5 ]
 
-        # MET + zll                                                                                                                                                                                                               
+        # MET + zll                                                                                                                                                                                                         
         event.zll_ht = -999.
         event.zll_deltaPhiMin = -999.
         event.zll_met_pt = -999.
@@ -144,6 +164,12 @@ class ttHMT2Control( Analyzer ):
         event.zll_mhtPhiJet40j = -999.
         event.zll_p4 = ROOT.reco.Particle.LorentzVector( 0, 0, 0, 0 )
 
+        event.zll_ht_30j = -999.
+        event.zll_deltaPhiMin_30j = -999.
+        event.zll_diffMetMht_30j = -999.
+        event.zll_mhtJet30j = -999.
+        event.zll_mhtPhiJet30j = -999.
+
         if len(vetoLeptons)==2:
             event.zll_met = ROOT.reco.Particle.LorentzVector( event.met.px(), event.met.py(), 0, 0 )
             for l in vetoLeptons:
@@ -152,11 +178,25 @@ class ttHMT2Control( Analyzer ):
             event.zll_met_pt = event.zll_met.pt()
             event.zll_met_phi = event.zll_met.phi()
 
-            # defining mht as hadronic mht                                                                                                                                                                                        
+            # defining mht as hadronic mht (30j)
+            event.zll_mhtJet30j = event.mhtJet30j
+            event.zll_mhtPhiJet30j = event.mhtPhiJet30j
+            
+            # defining mht as hadronic mht (40j)
             event.zll_mhtJet40j = event.mhtJet40j
             event.zll_mhtPhiJet40j = event.mhtPhiJet40j
 
-            # look for minimal deltaPhi between MET and four leading jets with pt>40 and |eta|<2.4                                                                                                                                
+            # look for minimal deltaPhi between MET and four leading jets with pt>30 and |eta|<2.5
+            event.zll_deltaPhiMin_30j = 999.
+            objects30jc = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 ]
+            objects30ja = [ j for j in event.cleanJets if j.pt() > 30]
+            event.zll_ht_30j = sum([x.pt() for x in objects30jc])
+            for n,j in enumerate(objects30ja):
+                if n>3:  break
+                thisDeltaPhi = abs( deltaPhi( j.phi(), event.zll_met.phi() ) )
+                if thisDeltaPhi < event.zll_deltaPhiMin_30j : event.zll_deltaPhiMin_30j = thisDeltaPhi
+
+            # look for minimal deltaPhi between MET and four leading jets with pt>40 and |eta|<2.5
             event.zll_deltaPhiMin = 999.
             objects40jc = [ j for j in event.cleanJets if j.pt() > 40 and abs(j.eta())<2.5 ]
             objects40ja = [ j for j in event.cleanJets if j.pt() > 40]
@@ -166,11 +206,15 @@ class ttHMT2Control( Analyzer ):
                 thisDeltaPhi = abs( deltaPhi( j.phi(), event.zll_met.phi() ) )
                 if thisDeltaPhi < event.zll_deltaPhiMin : event.zll_deltaPhiMin = thisDeltaPhi
 
-            # absolute value of the vectorial difference between met and mht                                                                                                                                                      
+            # absolute value of the vectorial difference between met and mht (30j)
+            zll_diffMetMht_30j_vec = ROOT.reco.Particle.LorentzVector(event.mhtJet30jvec.px()-event.zll_met.px(), event.mhtJet30jvec.py()-event.zll_met.py(), 0, 0 )
+            event.zll_diffMetMht_30j = sqrt( zll_diffMetMht_30j_vec.px()*zll_diffMetMht_30j_vec.px() + zll_diffMetMht_30j_vec.py()*zll_diffMetMht_30j_vec.py() )
+
+            # absolute value of the vectorial difference between met and mht (40j)
             zll_diffMetMht_vec = ROOT.reco.Particle.LorentzVector(event.mhtJet40jvec.px()-event.zll_met.px(), event.mhtJet40jvec.py()-event.zll_met.py(), 0, 0 )
             event.zll_diffMetMht = sqrt( zll_diffMetMht_vec.px()*zll_diffMetMht_vec.px() + zll_diffMetMht_vec.py()*zll_diffMetMht_vec.py() )
 
-            # di-lepton invariant mass                                                                                                                                                                                            
+            # di-lepton invariant mass
             for l in vetoLeptons:
                 event.zll_p4 += l.p4()
 

@@ -162,6 +162,7 @@ class ttHCoreEventAnalyzer( Analyzer ):
         ## with Central Jets
         objects25 = [ j for j in event.cleanJets if j.pt() > 25 ] + event.selectedLeptons
         objects30 = [ j for j in event.cleanJets if j.pt() > 30 ] + event.selectedLeptons
+        objects30j = [ j for j in event.cleanJets if j.pt() > 30 ] 
         objects40 = [ j for j in event.cleanJets if j.pt() > 40 ] + event.selectedLeptons
         objects40j = [ j for j in event.cleanJets if j.pt() > 40 ] 
         objects50j = [ j for j in event.cleanJets if j.pt() > 50 ] 
@@ -187,6 +188,11 @@ class ttHCoreEventAnalyzer( Analyzer ):
         event.mhtJet30vec = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects30])) , -1.*(sum([x.py() for x in objects30])), 0, 0 )             
         event.mhtJet30 = event.mhtJet30vec.pt()
         event.mhtPhiJet30 = event.mhtJet30vec.phi()
+
+        event.htJet30j = sum([x.pt() for x in objects30j])
+        event.mhtJet30jvec = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects30j])) , -1.*(sum([x.py() for x in objects30j])), 0, 0 )               
+        event.mhtJet30j = event.mhtJet30jvec.pt()
+        event.mhtPhiJet30j = event.mhtJet30jvec.phi()        
 
         event.htJet40 = sum([x.pt() for x in objects40])
         event.mhtJet40vec = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects40])) , -1.*(sum([x.py() for x in objects40])), 0, 0 )             
@@ -238,7 +244,16 @@ class ttHCoreEventAnalyzer( Analyzer ):
         objects25a  = [ j for j in event.cleanJetsAll if j.pt() > 25 ] + event.selectedLeptons
         objects30a  = [ j for j in event.cleanJetsAll if j.pt() > 30 ] + event.selectedLeptons
         objects40a  = [ j for j in event.cleanJetsAll if j.pt() > 40 ] + event.selectedLeptons
+        objects30ja = [ j for j in event.cleanJetsAll if j.pt() > 30 ]
         objects40ja = [ j for j in event.cleanJetsAll if j.pt() > 40 ] 
+
+        objects30ja10l5t = []
+        if hasattr(event, 'selectedIsoCleanTrack'):
+            objects30ja10l5t = [ j for j in event.cleanJetsAll if j.pt() > 30 ] + [ l for l in event.selectedLeptons if l.pt() > 10 ] + [ t for t in event.selectedIsoCleanTrack ]
+            objects30ja10l5t.sort(key = lambda obj : obj.pt(), reverse = True)
+
+        objects30ja10l = [ j for j in event.cleanJetsAll if j.pt() > 30 ] + [ l for l in event.selectedLeptons if l.pt() > 10 ]
+        objects30ja10l.sort(key = lambda obj : obj.pt(), reverse = True)
 
         objects40ja10l5t = []
         if hasattr(event, 'selectedIsoCleanTrack'):
@@ -257,6 +272,11 @@ class ttHCoreEventAnalyzer( Analyzer ):
         event.mhtJet30veca = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects30a])) , -1.*(sum([x.py() for x in objects30a])), 0, 0 )             
         event.mhtJet30a = event.mhtJet30veca.pt()
         event.mhtPhiJet30a = event.mhtJet30veca.phi()
+
+        event.htJet30ja = sum([x.pt() for x in objects30ja])
+        event.mhtJet30jveca = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects30ja])) , -1.*(sum([x.py() for x in objects30ja])), 0, 0 )                     
+        event.mhtJet30ja = event.mhtJet30jveca.pt()
+        event.mhtPhiJet30ja = event.mhtJet30jveca.phi()
 
         event.htJet40a = sum([x.pt() for x in objects40a])
         event.mhtJet40veca = ROOT.reco.Particle.LorentzVector(-1.*(sum([x.px() for x in objects40a])) , -1.*(sum([x.py() for x in objects40a])), 0, 0 )             
@@ -304,6 +324,21 @@ class ttHCoreEventAnalyzer( Analyzer ):
         self.makeMlls(event, self.maxLeps)
         self.makeLepPtRel(event)
 
+        
+        # look for minimal deltaPhi between MET and four leading jets with pt>40 and eta<2.4
+        event.deltaPhiMin_30j_had = 999.
+        for n,j in enumerate(objects30ja):
+            if n>3:  break
+            thisDeltaPhi = abs( deltaPhi( j.phi(), event.met.phi() ) )
+            if thisDeltaPhi < event.deltaPhiMin_30j_had : event.deltaPhiMin_30j_had = thisDeltaPhi
+
+        event.deltaPhiMin_30j = 999.
+        for n,j in enumerate(objects30ja10l5t):
+            if n>3:  break
+            thisDeltaPhi = abs( deltaPhi( j.phi(), event.met.phi() ) )
+            if thisDeltaPhi < event.deltaPhiMin_30j : event.deltaPhiMin_30j = thisDeltaPhi
+
+        
         # look for minimal deltaPhi between MET and four leading jets with pt>40 and eta<2.4
         event.deltaPhiMin_had = 999.
         for n,j in enumerate(objects40ja):
@@ -326,7 +361,15 @@ class ttHCoreEventAnalyzer( Analyzer ):
                 lep.mvaValueSusy = self.leptonMVASusy(lep)
 
 
-        # absolute value of the vectorial difference between met and mht
+        # absolute value of the vectorial difference between met and mht (30j)
+        diffMetMht_30j_had_vec = ROOT.reco.Particle.LorentzVector(event.mhtJet30jvec.px()-event.met.px(), event.mhtJet30jvec.py()-event.met.py(), 0, 0 )
+        event.diffMetMht_30j_had = sqrt( diffMetMht_30j_had_vec.px()*diffMetMht_30j_had_vec.px() + diffMetMht_30j_had_vec.py()*diffMetMht_30j_had_vec.py() )
+
+        diffMetMht_30j_vec = ROOT.reco.Particle.LorentzVector(event.mhtJet30j10l5tvec.px()-event.met.px(), event.mhtJet30j10l5tvec.py()-event.met.py(), 0, 0 )
+        event.diffMetMht_30j = sqrt( diffMetMht_30j_vec.px()*diffMetMht_30j_vec.px() + diffMetMht_30j_vec.py()*diffMetMht_30j_vec.py() )
+        ###
+
+        # absolute value of the vectorial difference between met and mht (40j)
         diffMetMht_had_vec = ROOT.reco.Particle.LorentzVector(event.mhtJet40jvec.px()-event.met.px(), event.mhtJet40jvec.py()-event.met.py(), 0, 0 )
         event.diffMetMht_had = sqrt( diffMetMht_had_vec.px()*diffMetMht_had_vec.px() + diffMetMht_had_vec.py()*diffMetMht_had_vec.py() )
 
@@ -334,6 +377,7 @@ class ttHCoreEventAnalyzer( Analyzer ):
         event.diffMetMht = sqrt( diffMetMht_vec.px()*diffMetMht_vec.px() + diffMetMht_vec.py()*diffMetMht_vec.py() )
         ###
 
+        
         #Make Biased DPhi
         event.biasedDPhi = -999
         self.makeBiasedDPhi(event)

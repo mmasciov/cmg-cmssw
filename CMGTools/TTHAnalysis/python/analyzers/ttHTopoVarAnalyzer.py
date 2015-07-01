@@ -36,21 +36,39 @@ class ttHTopoVarAnalyzer( Analyzer ):
         count = self.counters.counter('pairs')
         count.register('all events')
 
+#    def makeMinMT(self,event):
+#
+#        objectsb40jc = [ j for j in event.cleanJets if j.pt() > 40 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
+#
+#        if len(objectsb40jc)>0:
+#            for bjet in objectsb40jc:
+#                mtTemp = mtw(bjet, event.met)
+#                event.minMTBMet = min(event.minMTBMet,mtTemp)
+#
+#    def makeMinMTGamma(self,event):
+#
+#        gamma_objectsb40jc = [ j for j in event.gamma_cleanJets if j.pt() > 40 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
+#
+#        if len(gamma_objectsb40jc)>0:
+#            for bjet in gamma_objectsb40jc:
+#                mtTemp = mtw(bjet, event.gamma_met)
+#                event.gamma_minMTBMet = min(event.gamma_minMTBMet,mtTemp)
+
     def makeMinMT(self,event):
 
-        objectsb40jc = [ j for j in event.cleanJets if j.pt() > 40 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
+        objectsb30jc = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
 
-        if len(objectsb40jc)>0:
-            for bjet in objectsb40jc:
+        if len(objectsb30jc)>0:
+            for bjet in objectsb30jc:
                 mtTemp = mtw(bjet, event.met)
                 event.minMTBMet = min(event.minMTBMet,mtTemp)
 
     def makeMinMTGamma(self,event):
 
-        gamma_objectsb40jc = [ j for j in event.gamma_cleanJets if j.pt() > 40 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
+        gamma_objectsb30jc = [ j for j in event.gamma_cleanJets if j.pt() > 30 and abs(j.eta())<2.5 and j.btagWP("CSVv2IVFM")]
 
-        if len(gamma_objectsb40jc)>0:
-            for bjet in gamma_objectsb40jc:
+        if len(gamma_objectsb30jc)>0:
+            for bjet in gamma_objectsb30jc:
                 mtTemp = mtw(bjet, event.gamma_met)
                 event.gamma_minMTBMet = min(event.gamma_minMTBMet,mtTemp)
 

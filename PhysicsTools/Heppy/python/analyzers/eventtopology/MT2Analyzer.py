@@ -154,32 +154,43 @@ class MT2Analyzer( Analyzer ):
         import numpy
 
 
-        ptCut = 30.
-
-        objects40jc = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 ]
+#        ptCut = 30.
+        objects30jc = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 ]
+        objects40jc = [ j for j in event.cleanJets if j.pt() > 40 and abs(j.eta())<2.5 ]
 
 #### get hemispheres via AntiKT -1 antikt, 1 kt, 0 CA
-        if len(objects40jc)>=2:
 
-            event.mt2ViaKt_had=self.getMT2AKT(event, objects40jc, event.met, "_had")
+        if len(objects30jc)>=2:
+            event.mt2ViaKt_had=self.getMT2AKT(event, objects30jc, event.met, "_had")
+
+#        if len(objects40jc)>=2:
+#            event.mt2ViaKt_had=self.getMT2AKT(event, objects40jc, event.met, "_had")
 
 ## ===> hadronic MT2 (as used in the SUS-13-019)
 #### get hemispheres (seed 2: max inv mass, association method: default 3 = minimal lund distance)
 
-        if len(objects40jc)>=2:
+        if len(objects30jc)>=2:
+            event.mt2_had = self.getMT2Hemi(event,objects30jc, event.met, "_had")
 
-            event.mt2_had = self.getMT2Hemi(event,objects40jc, event.met, "_had")
+#        if len(objects40jc)>=2:
+#            event.mt2_had = self.getMT2Hemi(event,objects40jc, event.met, "_had")
 
 #### do same things for GEN
 
         if self.cfg_comp.isMC:
-            allGenJets = [ x for x in self.handles['genJets'].product() ] 
-            objects40jc_Gen = [ j for j in allGenJets if j.pt() > 30 and abs(j.eta())<2.5 ]
+            allGenJets = [ x for x in self.handles['genJets'].product() ]
+            objects30jc_Gen = [ j for j in allGenJets if j.pt() > 30 and abs(j.eta())<2.5 ]
+            objects40jc_Gen = [ j for j in allGenJets if j.pt() > 40 and abs(j.eta())<2.5 ]
      
-            if len(objects40jc_Gen)>=2:
-                event.mt2_gen = self.getMT2Hemi(event,objects40jc_Gen, event.met.genMET(), "_gen")
+            if len(objects30jc_Gen)>=2:
+                event.mt2_gen = self.getMT2Hemi(event,objects30jc_Gen, event.met.genMET(), "_gen")
         else:
             event.mt2_gen = -999.
+
+#            if len(objects40jc_Gen)>=2:
+#                event.mt2_gen = self.getMT2Hemi(event,objects40jc_Gen, event.met.genMET(), "_gen")
+#        else:
+#            event.mt2_gen = -999.
 
             
 ## ===> full MT2 (jets + leptons)
@@ -188,13 +199,17 @@ class MT2Analyzer( Analyzer ):
         if hasattr(event, 'selectedIsoCleanTrack'):
             objects10lc = [ l for l in event.selectedLeptons if l.pt() > 10 and abs(l.eta())<2.5 ] + [ t for t in event.selectedIsoCleanTrack ]
 
-        objects40j10lc = objects40jc + objects10lc
+        objects30j10lc = objects30jc + objects10lc
+        objects30j10lc.sort(key = lambda obj : obj.pt(), reverse = True)
 
+        objects40j10lc = objects40jc + objects10lc
         objects40j10lc.sort(key = lambda obj : obj.pt(), reverse = True)
 
-        if len(objects40j10lc)>=2:
+        if len(objects30j10lc)>=2:
+            event.mt2 = self.getMT2Hemi(event,objects30j10lc,event.met,"") # no postfit since this is the nominal MT2
 
-            event.mt2 = self.getMT2Hemi(event,objects40j10lc,event.met,"") # no postfit since this is the nominal MT2
+#        if len(objects40j10lc)>=2:
+#            event.mt2 = self.getMT2Hemi(event,objects40j10lc,event.met,"") # no postfit since this is the nominal MT2
 
 ## ===> full gamma_MT2
 
@@ -204,16 +219,21 @@ class MT2Analyzer( Analyzer ):
             
         if hasattr(event, 'gamma_met'):
 
-            gamma_objects40jc = [ j for j in event.gamma_cleanJets if j.pt() > 30 and abs(j.eta())<2.5 ]
-            
+            gamma_objects30jc = [ j for j in event.gamma_cleanJets if j.pt() > 30 and abs(j.eta())<2.5 ]            
+            gamma_objects30j10lc = gamma_objects30jc + objects10lc
+            gamma_objects30j10lc.sort(key = lambda obj : obj.pt(), reverse = True)
+
+            gamma_objects40jc = [ j for j in event.gamma_cleanJets if j.pt() > 40 and abs(j.eta())<2.5 ]
             gamma_objects40j10lc = gamma_objects40jc + objects10lc
-            
             gamma_objects40j10lc.sort(key = lambda obj : obj.pt(), reverse = True)
+
+##        if len(gamma_objects30j10lc)>=2:
+            if len(gamma_objects30jc)>=2:                
+                event.gamma_mt2 = self.getMT2Hemi(event,gamma_objects30jc,event.gamma_met,"_gamma")
             
-##        if len(gamma_objects40j10lc)>=2:
-            if len(gamma_objects40jc)>=2:
-                
-                event.gamma_mt2 = self.getMT2Hemi(event,gamma_objects40jc,event.gamma_met,"_gamma")
+###        if len(gamma_objects40j10lc)>=2:
+#            if len(gamma_objects40jc)>=2:                
+#                event.gamma_mt2 = self.getMT2Hemi(event,gamma_objects40jc,event.gamma_met,"_gamma")
 
 
 ## ===> zll_MT2
@@ -223,12 +243,13 @@ class MT2Analyzer( Analyzer ):
         event.pseudoJet2_zll  = ROOT.reco.Particle.LorentzVector( 0, 0, 0, 0 )
                 
         if hasattr(event, 'zll_met'):
-
             csLeptons = [ l for l in event.selectedLeptons if l.pt() > 10 and abs(l.eta()) < 2.5 ]
             
-            if len(csLeptons)==2 and len(objects40jc)>=2:
-            
-                event.zll_mt2 = self.getMT2Hemi(event,objects40jc,event.zll_met,"_zll")
+            if len(csLeptons)==2 and len(objects30jc)>=2:
+                event.zll_mt2 = self.getMT2Hemi(event,objects30jc,event.zll_met,"_zll")
+
+#            if len(csLeptons)==2 and len(objects40jc)>=2:
+#                event.zll_mt2 = self.getMT2Hemi(event,objects40jc,event.zll_met,"_zll")
 
 
 #### do the mt2 with one or two b jets (medium CSV)                                                                                                                                                                                                         
@@ -237,13 +258,20 @@ class MT2Analyzer( Analyzer ):
            event.mt2bb = self.computeMT2(event.bjetsMedium[0], event.bjetsMedium[1], event.met)
 #            print 'MT2bb(2b)',event.mt2bb                                                                                                                                                                                                                 
         if len(event.bjetsMedium)==1:
-
-            objects40jcCSV = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 and j.p4()!=event.bjetsMedium[0].p4() ]
+            
+            objects30jcCSV = [ j for j in event.cleanJets if j.pt() > 30 and abs(j.eta())<2.5 and j.p4()!=event.bjetsMedium[0].p4() ]
+            objects30jcCSV.sort(key = lambda l : l.btag('combinedInclusiveSecondaryVertexV2BJetTags'), reverse = True)
+            
+            objects40jcCSV = [ j for j in event.cleanJets if j.pt() > 40 and abs(j.eta())<2.5 and j.p4()!=event.bjetsMedium[0].p4() ]
             objects40jcCSV.sort(key = lambda l : l.btag('combinedInclusiveSecondaryVertexV2BJetTags'), reverse = True)
 
-            if len(objects40jcCSV)>0:
-                event.mt2bb = self.computeMT2(event.bjetsMedium[0], objects40jcCSV[0], event.met)
-##                print 'MT2bb(1b)',event.mt2bb                                                                                                                                                                                                             
+            if len(objects30jcCSV)>0:
+                event.mt2bb = self.computeMT2(event.bjetsMedium[0], objects30jcCSV[0], event.met)
+
+#            if len(objects40jcCSV)>0:
+#                event.mt2bb = self.computeMT2(event.bjetsMedium[0], objects40jcCSV[0], event.met)
+
+###                print 'MT2bb(1b)',event.mt2bb                                                                                                                                                                                                             
 
 ## ===> leptonic MT2 (as used in the SUS-13-025 )                                                                                                                                                                                                           
         if not self.cfg_ana.doOnlyDefault:
